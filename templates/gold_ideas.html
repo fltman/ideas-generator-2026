@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="sv" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gold Ideas Hall of Fame - Idea Builder</title>
+    <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        .gold-ideas-header {
+            background-color: #222;
+            border-bottom: 2px solid gold;
+            padding: 15px 20px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .gold-ideas-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 20px 50px 20px;
+        }
+        
+        .gold-idea-card {
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            animation: fade-in 0.5s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .gold-idea-content {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+        }
+        
+        .gold-idea-image {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 5px;
+            object-fit: cover;
+            align-self: flex-start;
+        }
+        
+        .gold-idea-image-container {
+            flex-shrink: 0;
+            width: 200px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #222;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .gold-idea-text-container {
+            flex-grow: 1;
+        }
+        
+        .new-idea {
+            border-left: 3px solid gold;
+        }
+        
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .gold-idea-headline {
+            font-weight: bold;
+            font-size: 1.4em;
+            color: gold;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+        
+        .gold-idea-text {
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+            font-size: 1.1em;
+            line-height: 1.5;
+        }
+        
+        .gold-idea-date {
+            font-size: 0.85em;
+            color: #888;
+            text-align: right;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 50px 0;
+            color: #888;
+        }
+        
+        .empty-state p {
+            margin-top: 15px;
+            font-size: 1.1em;
+        }
+        
+        h1 {
+            color: gold;
+            margin: 0;
+        }
+        
+        .search-bar {
+            margin: 0 auto 30px auto;
+            max-width: 600px;
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .pagination-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+            gap: 5px;
+        }
+        
+        .pagination-container button {
+            min-width: 40px;
+        }
+        
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 8px;
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .status-indicator.live {
+            color: #28a745;
+        }
+        
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #28a745;
+            display: inline-block;
+            margin-right: 5px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
+        }
+        
+        .highlight {
+            background-color: rgba(255, 215, 0, 0.2);
+            padding: 2px 0;
+        }
+        
+        .page-size-selector {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .page-size-selector select {
+            width: 80px;
+        }
+        
+        @media (max-width: 768px) {
+            .gold-idea-content {
+                flex-direction: column;
+            }
+            
+            .gold-idea-image-container {
+                width: 100%;
+                height: auto;
+                max-height: 300px;
+                margin-bottom: 15px;
+            }
+            
+            .gold-idea-image {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="gold-ideas-header">
+        <h1>Gold Ideas Hall of Fame</h1>
+    </div>
+    
+    <div class="gold-ideas-container">
+        <!-- Search bar -->
+        <div class="search-bar">
+            <form class="search-form" id="searchForm">
+                <input type="text" class="form-control" id="searchInput" placeholder="Search ideas...">
+                <button type="submit" class="btn btn-primary">Search</button>
+                <button type="button" class="btn btn-outline-secondary" id="clearSearch">Clear</button>
+            </form>
+        </div>
+        
+        <!-- Page size selector -->
+        <div class="page-size-selector">
+            <label for="pageSize">Ideas per page:</label>
+            <select id="pageSize" class="form-select form-select-sm">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50" selected>50</option>
+            </select>
+        </div>
+        
+        <!-- Status indicator -->
+        <div class="status-indicator live" id="statusIndicator">
+            <span class="live-indicator"></span>
+            <span>Live updates enabled</span>
+        </div>
+        
+        <!-- Gold ideas list -->
+        <div id="goldIdeasList">
+            <!-- Gold ideas will be loaded here -->
+            <div class="empty-state">
+                <div>Loading gold ideas...</div>
+            </div>
+        </div>
+        
+        <!-- Pagination controls -->
+        <div class="pagination-container" id="pagination">
+            <!-- Pagination buttons will be added here -->
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let allGoldIdeas = [];
+        let filteredIdeas = [];
+        let lastKnownIdeas = [];
+        let currentPage = 1;
+        let pageSize = 50;
+        let searchQuery = '';
+        let isSearchActive = false;
+        let liveUpdatesEnabled = true;
+        let updateTimer = null;
+        
+        // Load gold ideas when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize page size from selector
+            const pageSizeSelector = document.getElementById('pageSize');
+            pageSize = parseInt(pageSizeSelector.value);
+            
+            // Set up event listeners
+            setUpEventListeners();
+            
+            // Initial load of gold ideas
+            loadGoldIdeas();
+            
+            // Start auto-refresh timer
+            startAutoRefresh();
+        });
+        
+        // Set up all event listeners
+        function setUpEventListeners() {
+            // Search form
+            document.getElementById('searchForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                searchQuery = document.getElementById('searchInput').value.trim();
+                isSearchActive = searchQuery !== '';
+                updateStatusIndicator();
+                currentPage = 1;
+                
+                // Always perform a new load when searching - this will use server-side search
+                loadGoldIdeas();
+            });
+            
+            // Clear search
+            document.getElementById('clearSearch').addEventListener('click', function() {
+                document.getElementById('searchInput').value = '';
+                searchQuery = '';
+                isSearchActive = false;
+                updateStatusIndicator();
+                currentPage = 1;
+                loadGoldIdeas(); // Reload without search query
+            });
+            
+            // Page size selector
+            document.getElementById('pageSize').addEventListener('change', function() {
+                pageSize = parseInt(this.value);
+                currentPage = 1;
+                filterAndDisplayIdeas();
+            });
+        }
+        
+        // Update status indicator based on search/live update state
+        function updateStatusIndicator() {
+            const indicator = document.getElementById('statusIndicator');
+            
+            if (isSearchActive) {
+                indicator.classList.remove('live');
+                indicator.innerHTML = `<span>Search results for: "${searchQuery}"</span>`;
+                
+                // Disable auto-refresh when searching
+                if (updateTimer) {
+                    clearInterval(updateTimer);
+                    updateTimer = null;
+                }
+                liveUpdatesEnabled = false;
+            } else {
+                indicator.classList.add('live');
+                indicator.innerHTML = `<span class="live-indicator"></span><span>Live updates enabled</span>`;
+                
+                // Re-enable auto-refresh when not searching
+                if (!updateTimer) {
+                    startAutoRefresh();
+                }
+                liveUpdatesEnabled = true;
+            }
+        }
+        
+        // Start auto-refresh timer
+        function startAutoRefresh() {
+            updateTimer = setInterval(function() {
+                if (!isSearchActive) {
+                    loadGoldIdeas();
+                }
+            }, 10000); // Refresh every 10 seconds
+        }
+        
+        // Function to load gold ideas from the server
+        function loadGoldIdeas() {
+            let url = '/gold-ideas';
+            
+            // Add search query parameter if searching
+            if (isSearchActive && searchQuery) {
+                url += `?query=${encodeURIComponent(searchQuery)}`;
+            }
+            
+            console.log(`Fetching ideas from ${url}`);
+            
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        console.log(`Received ${data.gold_ideas.length} ideas from server`);
+                        
+                        // Log the first few ideas from the server response
+                        if (data.gold_ideas.length > 0) {
+                            console.log("First 5 ideas from server response:");
+                            data.gold_ideas.slice(0, 5).forEach((idea, idx) => {
+                                console.log(`  ${idx+1}. ID: ${idea.id}, Date: ${idea.created_at}, Headline: ${idea.headline?.substring(0, 30) || 'No headline'}...`);
+                            });
+                        }
+                        
+                        // When searching, replace entire list with search results
+                        if (isSearchActive) {
+                            allGoldIdeas = data.gold_ideas;
+                            filterAndDisplayIdeas();
+                            return;
+                        }
+                        
+                        // For regular updates (not searching), find only new ideas
+                        // Create a Set of existing IDs for quick lookup
+                        const existingIds = new Set(allGoldIdeas.map(idea => idea.id));
+                        
+                        // Filter to find only the new ideas (those not in existingIds)
+                        const newIdeas = data.gold_ideas.filter(idea => !existingIds.has(idea.id));
+                        
+                        if (newIdeas.length > 0) {
+                            console.log(`Found ${newIdeas.length} new gold ideas`);
+                            
+                            // Log the new ideas
+                            if (newIdeas.length > 0) {
+                                console.log("New ideas to be added:");
+                                newIdeas.slice(0, 5).forEach((idea, idx) => {
+                                    console.log(`  ${idx+1}. ID: ${idea.id}, Date: ${idea.created_at}, Headline: ${idea.headline?.substring(0, 30) || 'No headline'}...`);
+                                });
+                            }
+                            
+                            // Mark all new ideas for highlighting
+                            newIdeas.forEach(idea => {
+                                idea.isNew = true;
+                            });
+                            
+                            // Add new ideas to the beginning of our array - MAINTAINING SERVER ORDER
+                            allGoldIdeas = [...newIdeas, ...allGoldIdeas];
+                            
+                            // Log the combined array to verify order
+                            console.log("First 5 ideas in allGoldIdeas after adding new ideas:");
+                            allGoldIdeas.slice(0, 5).forEach((idea, idx) => {
+                                console.log(`  ${idx+1}. ID: ${idea.id}, Date: ${idea.created_at}`);
+                            });
+                            
+                            // Display new ideas at the top
+                            prependNewIdeasToDOM(newIdeas);
+                        }
+                        
+                        // Initial load (no ideas yet)
+                        if (allGoldIdeas.length === 0 && data.gold_ideas.length > 0) {
+                            console.log("Initial load of gold ideas from server");
+                            allGoldIdeas = data.gold_ideas;
+                            
+                            // Log the initial set
+                            console.log("First 5 ideas in initial load:");
+                            allGoldIdeas.slice(0, 5).forEach((idea, idx) => {
+                                console.log(`  ${idx+1}. ID: ${idea.id}, Date: ${idea.created_at}, Headline: ${idea.headline?.substring(0, 30) || 'No headline'}...`);
+                            });
+                            
+                            filterAndDisplayIdeas();
+                        }
+                    } else {
+                        showError("Failed to load gold ideas");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading gold ideas:', error);
+                    showError("Error connecting to the server");
+                });
+        }
+        
+        // Function to prepend new ideas to the DOM
+        function prependNewIdeasToDOM(newIdeas) {
+            if (newIdeas.length === 0) return;
+            
+            console.log(`Prepending ${newIdeas.length} new ideas to DOM`);
+            console.log("New ideas in order they will be prepended:");
+            newIdeas.forEach((idea, i) => {
+                if (i < 5) {
+                    console.log(`  ${i+1}. ID: ${idea.id}, Date: ${idea.created_at}, Headline: ${idea.headline.substring(0, 30)}...`);
+                }
+            });
+            
+            const container = document.getElementById('goldIdeasList');
+            
+            // If there's an empty state message, clear it
+            if (container.querySelector('.empty-state')) {
+                container.innerHTML = '';
+            }
+            
+            // Instead of limiting based on current count, always add new ideas
+            // Build a fragment to prepend everything at once
+            const fragment = document.createDocumentFragment();
+            let addedCount = 0;
+            
+            // Add ALL new ideas, not just up to the page size limit
+            newIdeas.forEach(idea => {
+                const card = createIdeaCard(idea);
+                // Store the idea ID as a data attribute for future reference
+                card.dataset.ideaId = idea.id;
+                fragment.appendChild(card);
+                addedCount++;
+            });
+            
+            // Prepend the fragment to the container
+            if (container.firstChild) {
+                container.insertBefore(fragment, container.firstChild);
+            } else {
+                container.appendChild(fragment);
+            }
+            
+            // Remove extra cards if we're over the page size
+            const cards = container.querySelectorAll('.gold-idea-card');
+            for (let i = pageSize; i < cards.length; i++) {
+                container.removeChild(cards[i]);
+            }
+            
+            console.log(`Added ${addedCount} new ideas to the DOM`);
+            
+            // Verify DOM order after adding new ideas
+            console.log("DOM order after adding new ideas:");
+            const updatedCards = container.querySelectorAll('.gold-idea-card');
+            for (let i = 0; i < Math.min(5, updatedCards.length); i++) {
+                // Get the idea ID from the data attribute instead of parsing the text
+                const ideaId = updatedCards[i].dataset.ideaId;
+                console.log(`  DOM position ${i+1}: ID: ${ideaId}`);
+            }
+            
+            // Update pagination if necessary
+            if (newIdeas.length > 0) {
+                renderPagination();
+            }
+        }
+        
+        // Function to create a card for an idea
+        function createIdeaCard(idea) {
+            const card = document.createElement('div');
+            card.className = 'gold-idea-card';
+            // Store the idea ID as a data attribute
+            card.dataset.ideaId = idea.id;
+            
+            // Add 'new-idea' class for highlighting if this is a new idea
+            if (idea.isNew) {
+                card.classList.add('new-idea');
+                
+                // Remove the highlight after 10 seconds
+                setTimeout(() => {
+                    card.classList.remove('new-idea');
+                }, 10000);
+            }
+            
+            const headline = document.createElement('div');
+            headline.className = 'gold-idea-headline';
+            
+            // Format date in Stockholm time zone (Europe/Stockholm)
+            const ideaDate = new Date(idea.created_at);
+            // Format as YYYY-MM-DD hh:mm:ss using Stockholm time zone
+            const dateString = new Intl.DateTimeFormat('sv-SE', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                timeZone: 'Europe/Stockholm',
+                hour12: false
+            }).format(ideaDate).replace(/(\d+)\/(\d+)\/(\d+)/, '$3-$2-$1');
+            
+            // Add the headline content with timestamp but no ID
+            if (searchQuery && idea.headline) {
+                headline.innerHTML = `${highlightSearchTerms(idea.headline, searchQuery)}`;
+            } else {
+                headline.innerHTML = `${idea.headline}`;
+            }
+            
+            // Create content container for image and text
+            const contentContainer = document.createElement('div');
+            contentContainer.className = 'gold-idea-content';
+            
+            // Create image container and image if available
+            if (idea.image_url) {
+                const imageContainer = document.createElement('div');
+                imageContainer.className = 'gold-idea-image-container';
+                
+                const image = document.createElement('img');
+                image.className = 'gold-idea-image';
+                
+                // Check if the image_url is a relative path, an absolute URL, or a Replit Object Storage key
+                if (idea.image_url.startsWith('/static/')) {
+                    // It's a relative path to a local file
+                    image.src = idea.image_url;
+                } else if (idea.image_url.startsWith('http')) {
+                    // It's an absolute URL (old format)
+                    image.src = idea.image_url;
+                } else {
+                    // It's likely a Replit Object Storage key
+                    // Load image placeholder initially
+                    image.src = '/static/images/loading-placeholder.gif';
+                    
+                    // Fetch the image from Replit Object Storage
+                    fetch(`/get-image/${idea.image_url}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success && data.image_data) {
+                                // Set the image source to the base64 data
+                                image.src = data.image_data;
+                            } else {
+                                // If error, set to a placeholder
+                                image.src = '/static/images/placeholder.png';
+                                console.error('Failed to load image:', idea.image_url);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching image:', error);
+                            image.src = '/static/images/placeholder.png';
+                        });
+                }
+                
+                image.alt = idea.headline;
+                image.loading = 'lazy'; // Lazy load images for better performance
+                
+                // Add click listener to open image in larger view
+                image.addEventListener('click', function() {
+                    // If it's a local path, we need to handle it differently than external URLs
+                    if (idea.image_url.startsWith('/static/') || idea.image_url.startsWith('http')) {
+                        // Previous logic for local files and external URLs
+                        // Open in a lightbox or modal instead of a new tab
+                        const modal = document.createElement('div');
+                        modal.style.position = 'fixed';
+                        modal.style.top = '0';
+                        modal.style.left = '0';
+                        modal.style.width = '100%';
+                        modal.style.height = '100%';
+                        modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+                        modal.style.display = 'flex';
+                        modal.style.justifyContent = 'center';
+                        modal.style.alignItems = 'center';
+                        modal.style.zIndex = '1000';
+                        
+                        const modalImg = document.createElement('img');
+                        modalImg.src = image.src; // Use the current image source
+                        modalImg.style.maxWidth = '90%';
+                        modalImg.style.maxHeight = '90%';
+                        modalImg.style.border = '2px solid white';
+                        modalImg.style.borderRadius = '5px';
+                        
+                        modal.appendChild(modalImg);
+                        document.body.appendChild(modal);
+                        
+                        // Close the modal when clicked
+                        modal.addEventListener('click', function() {
+                            document.body.removeChild(modal);
+                        });
+                    } else {
+                        // For Replit Object Storage images, we already have the full image
+                        // Just display it in a modal
+                        const modal = document.createElement('div');
+                        modal.style.position = 'fixed';
+                        modal.style.top = '0';
+                        modal.style.left = '0';
+                        modal.style.width = '100%';
+                        modal.style.height = '100%';
+                        modal.style.backgroundColor = 'rgba(0,0,0,0.8)';
+                        modal.style.display = 'flex';
+                        modal.style.justifyContent = 'center';
+                        modal.style.alignItems = 'center';
+                        modal.style.zIndex = '1000';
+                        
+                        const modalImg = document.createElement('img');
+                        modalImg.src = image.src; // Use the current image source
+                        modalImg.style.maxWidth = '90%';
+                        modalImg.style.maxHeight = '90%';
+                        modalImg.style.border = '2px solid white';
+                        modalImg.style.borderRadius = '5px';
+                        
+                        modal.appendChild(modalImg);
+                        document.body.appendChild(modal);
+                        
+                        // Close the modal when clicked
+                        modal.addEventListener('click', function() {
+                            document.body.removeChild(modal);
+                        });
+                    }
+                });
+                image.style.cursor = 'pointer';
+                
+                imageContainer.appendChild(image);
+                contentContainer.appendChild(imageContainer);
+            }
+            
+            // Create text container
+            const textContainer = document.createElement('div');
+            textContainer.className = 'gold-idea-text-container';
+            
+            const text = document.createElement('div');
+            text.className = 'gold-idea-text';
+            
+            // Highlight search terms in text if searching
+            if (searchQuery && idea.idea_text) {
+                text.innerHTML = highlightSearchTerms(idea.idea_text, searchQuery);
+            } else {
+                text.textContent = idea.idea_text;
+            }
+            
+            const date = document.createElement('div');
+            date.className = 'gold-idea-date';
+            date.textContent = dateString;
+            
+            textContainer.appendChild(text);
+            textContainer.appendChild(date);
+            contentContainer.appendChild(textContainer);
+            
+            card.appendChild(headline);
+            card.appendChild(contentContainer);
+            
+            return card;
+        }
+        
+        // Filter ideas based on search query and paginate
+        function filterAndDisplayIdeas() {
+            console.log(`Filtering and displaying ideas - allGoldIdeas has ${allGoldIdeas.length} items`);
+            
+            // Log the first few ideas in allGoldIdeas before filtering
+            if (allGoldIdeas.length > 0) {
+                console.log("allGoldIdeas before filtering (first 5):");
+                allGoldIdeas.slice(0, 5).forEach((idea, idx) => {
+                    console.log(`  ${idx+1}. ID: ${idea.id}, Date: ${idea.created_at}`);
+                });
+            }
+            
+            // When searching, we already have the filtered ideas from the server
+            if (isSearchActive) {
+                filteredIdeas = [...allGoldIdeas];
+            } else {
+                // For regular viewing, use all ideas - with spread to create a new array without modifying original
+                filteredIdeas = [...allGoldIdeas];
+            }
+            
+            // Log the filtered ideas to verify their order
+            if (filteredIdeas.length > 0) {
+                console.log(`filteredIdeas has ${filteredIdeas.length} items, displaying first 5:`);
+                filteredIdeas.slice(0, 5).forEach((idea, idx) => {
+                    console.log(`  ${idx+1}. ID: ${idea.id}, Date: ${idea.created_at}`);
+                });
+            }
+            
+            // Display pagination
+            renderPagination();
+            
+            // Get current page of ideas
+            const paginatedIdeas = getPaginatedIdeas();
+            
+            // Log the paginated ideas to verify their order
+            if (paginatedIdeas.length > 0) {
+                console.log(`Current page will display ${paginatedIdeas.length} ideas (first 5):`);
+                paginatedIdeas.slice(0, 5).forEach((idea, idx) => {
+                    console.log(`  ${idx+1}. ID: ${idea.id}, Date: ${idea.created_at}`);
+                });
+            }
+            
+            // Display the current page of ideas
+            displayGoldIdeas(paginatedIdeas);
+        }
+        
+        // Get current page of ideas
+        function getPaginatedIdeas() {
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            
+            return filteredIdeas.slice(startIndex, endIndex);
+        }
+        
+        // Render pagination controls
+        function renderPagination() {
+            const paginationElement = document.getElementById('pagination');
+            paginationElement.innerHTML = '';
+            
+            if (filteredIdeas.length <= pageSize) {
+                // No pagination needed
+                return;
+            }
+            
+            const totalPages = Math.ceil(filteredIdeas.length / pageSize);
+            
+            // Previous button
+            const prevButton = document.createElement('button');
+            prevButton.className = 'btn btn-outline-secondary';
+            prevButton.innerHTML = '&laquo;';
+            prevButton.disabled = currentPage === 1;
+            prevButton.addEventListener('click', () => {
+                if (currentPage > 1) {
+                    currentPage--;
+                    filterAndDisplayIdeas();
+                }
+            });
+            paginationElement.appendChild(prevButton);
+            
+            // Page buttons
+            const maxButtons = 5;
+            const startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+            const endPage = Math.min(totalPages, startPage + maxButtons - 1);
+            
+            for (let i = startPage; i <= endPage; i++) {
+                const pageButton = document.createElement('button');
+                pageButton.className = i === currentPage ? 'btn btn-primary' : 'btn btn-outline-secondary';
+                pageButton.textContent = i;
+                pageButton.addEventListener('click', () => {
+                    currentPage = i;
+                    filterAndDisplayIdeas();
+                });
+                paginationElement.appendChild(pageButton);
+            }
+            
+            // Next button
+            const nextButton = document.createElement('button');
+            nextButton.className = 'btn btn-outline-secondary';
+            nextButton.innerHTML = '&raquo;';
+            nextButton.disabled = currentPage === totalPages;
+            nextButton.addEventListener('click', () => {
+                if (currentPage < totalPages) {
+                    currentPage++;
+                    filterAndDisplayIdeas();
+                }
+            });
+            paginationElement.appendChild(nextButton);
+            
+            // Page info
+            const pageInfo = document.createElement('span');
+            pageInfo.className = 'ms-3 text-muted';
+            pageInfo.textContent = `Page ${currentPage} of ${totalPages}`;
+            paginationElement.appendChild(pageInfo);
+        }
+        
+        // Function to display gold ideas in the UI
+        function displayGoldIdeas(goldIdeas) {
+            const container = document.getElementById('goldIdeasList');
+            container.innerHTML = '';
+            
+            if (goldIdeas.length === 0) {
+                if (searchQuery) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div>🔍</div>
+                            <p>No gold ideas found matching "${searchQuery}"</p>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div>🏆</div>
+                            <p>No gold ideas yet. Rate your best ideas to see them here!</p>
+                        </div>
+                    `;
+                }
+                return;
+            }
+            
+            console.log(`Displaying ${goldIdeas.length} ideas in the DOM`);
+            
+            // Log the first few ideas for debugging
+            if (goldIdeas.length > 0) {
+                console.log("Ideas in the exact order they will be displayed:");
+                goldIdeas.slice(0, 5).forEach((idea, i) => {
+                    console.log(`  ${i+1}. ID: ${idea.id}, Date: ${idea.created_at}, Headline: ${idea.headline.substring(0, 30)}...`);
+                });
+            }
+            
+            // Simply render the ideas in the exact order provided by the server/array
+            // No sorting, no manipulation - just direct rendering
+            goldIdeas.forEach(idea => {
+                const card = createIdeaCard(idea);
+                container.appendChild(card);
+            });
+            
+            // Double check the actual DOM order matches our data
+            console.log("DOM order verification:");
+            const cardElements = container.querySelectorAll('.gold-idea-card');
+            for (let i = 0; i < Math.min(5, cardElements.length); i++) {
+                // Get the idea ID from the data attribute instead of parsing the text
+                const ideaId = cardElements[i].dataset.ideaId;
+                console.log(`  DOM position ${i+1}: ID: ${ideaId}`);
+            }
+        }
+        
+        // Highlight search terms in text
+        function highlightSearchTerms(text, query) {
+            if (!query || !text) return text;
+            
+            const words = query.toLowerCase().split(/\s+/).filter(word => word.length > 0);
+            let htmlText = text;
+            
+            words.forEach(word => {
+                const regex = new RegExp(`(${escapeRegExp(word)})`, 'gi');
+                htmlText = htmlText.replace(regex, '<span class="highlight">$1</span>');
+            });
+            
+            return htmlText;
+        }
+        
+        // Escape special characters for regex
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+        
+        // Function to display errors
+        function showError(message) {
+            const container = document.getElementById('goldIdeasList');
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div>⚠️</div>
+                    <p>${message}</p>
+                    <button class="btn btn-outline-warning mt-3" onclick="loadGoldIdeas()">Try Again</button>
+                </div>
+            `;
+        }
+        
+        // Clean up when page unloads
+        window.addEventListener('beforeunload', function() {
+            if (updateTimer) {
+                clearInterval(updateTimer);
+            }
+        });
+    </script>
+</body>
+</html> 

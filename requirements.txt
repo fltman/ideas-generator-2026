@@ -1,0 +1,8 @@
+Flask
+Werkzeug
+requests
+beautifulsoup4
+Pillow
+reportlab
+openai
+pytz
